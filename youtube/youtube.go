@@ -31,7 +31,7 @@ func (yt *Client) AddMessageHandler(callback func(msg Message)) {
 	yt.MessageHandlers = append(yt.MessageHandlers, callback)
 }
 func (yt *Client) Start() {
-	log.Println("Registered", len(yt.MessageHandlers), "message handlers.")
+	log.Println("Registered", len(yt.MessageHandlers), "message handler(s).")
 	yt.refreshAccessToken()
 
 	for {
