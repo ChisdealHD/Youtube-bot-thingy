@@ -50,7 +50,7 @@ type messageAuthorDetails struct {
 }
 
 func (msg Message) Reply(content string) (Message, error) {
-	return msg.yt.SendMessage(msg.Snippet.LiveChatId, "@" + msg.AuthorDetails.DisplayName + " " + content)git
+	return msg.yt.SendMessage(msg.Snippet.LiveChatId, "@" + msg.AuthorDetails.DisplayName + " " + content)
 }
 func (msg Message) Delete(timeout time.Duration) {
 	go func() {
