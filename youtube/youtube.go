@@ -12,9 +12,6 @@ import (
 	"time"
 )
 
-var pageToken = ""
-var startupTime = time.Now()
-
 type Client struct {
 	ChannelID         string
 	ChatID            string
@@ -25,6 +22,8 @@ type Client struct {
 	ClientID          string
 	ClientSecret      string
 	MessageHandlers   []func(msg Message)
+	startupTime       time.Time
+	pageToken         string
 }
 
 func (yt *Client) AddMessageHandler(callback func(msg Message)) {
@@ -33,11 +32,12 @@ func (yt *Client) AddMessageHandler(callback func(msg Message)) {
 func (yt *Client) Start() {
 	log.Println("Registered", len(yt.MessageHandlers), "message handler(s).")
 	yt.refreshAccessToken()
+	yt.startupTime = time.Now()
 
 	for {
 		url := fmt.Sprintf("https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=%s&part=id,snippet,authorDetails&key=%s", yt.ChatID, yt.ApiKey)
-		if pageToken != "" {
-			url += "&pageToken=" + pageToken
+		if yt.pageToken != "" {
+			url += "&pageToken=" + yt.pageToken
 		}
 		resp, err := http.Get(url)
 		if err != nil {
@@ -59,14 +59,14 @@ func (yt *Client) Start() {
 			panic(err)
 		}
 
-		pageToken = data.NextPageToken
+		yt.pageToken = data.NextPageToken
 
 		for _, message := range data.Items {
 			published, err := time.Parse(time.RFC3339, message.Snippet.PublishedAt)
 			if err != nil {
 				log.Fatal(err)
 			}
-			if !published.Before(startupTime) && message.AuthorDetails.ChannelId != yt.ChannelID && message.Snippet.Type == "textMessageEvent" {
+			if !published.Before(yt.startupTime) && message.AuthorDetails.ChannelId != yt.ChannelID && message.Snippet.Type == "textMessageEvent" {
 				message.yt = yt
 
 				for _, handler := range yt.MessageHandlers {
